@@ -12,11 +12,8 @@ use crate::utils::*;
 //use solana_sdk::pubkey::Pubkey;
 
 use solana_program::{
-    pubkey::Pubkey,
-    instruction::InstructionError,
-    account_info::AccountInfo,
-    entrypoint::ProgramResult,
-    program_utils::limited_deserialize, program_error::ProgramError
+    account_info::AccountInfo, entrypoint::ProgramResult, instruction::InstructionError,
+    program_error::ProgramError, program_utils::limited_deserialize, pubkey::Pubkey,
 };
 
 pub struct SpvProcessor;
@@ -29,7 +26,8 @@ pub fn process_instruction(
 ) -> ProgramResult {
     // solana_logger::setup();
 
-    let command = limited_deserialize::<SpvInstruction>(data, data.len() as u64).map_err(|err| ProgramError::BorshIoError(err.to_string()))?;
+    let command = limited_deserialize::<SpvInstruction>(data, data.len() as u64)
+        .map_err(|err| ProgramError::BorshIoError(err.to_string()))?;
 
     solana_program::log::sol_log(&format!("{:?}", command));
 
@@ -37,13 +35,16 @@ pub fn process_instruction(
 
     match command {
         SpvInstruction::ClientRequest(client_request_info) => {
-            SpvProcessor::do_client_request(accounts, &client_request_info).map_err(|err| ProgramError::BorshIoError(err.to_string()))?;
+            SpvProcessor::do_client_request(accounts, &client_request_info)
+                .map_err(|err| ProgramError::BorshIoError(err.to_string()))?;
         }
         SpvInstruction::CancelRequest => {
-            SpvProcessor::do_cancel_request(accounts).map_err(|err| ProgramError::BorshIoError(err.to_string()))?;
+            SpvProcessor::do_cancel_request(accounts)
+                .map_err(|err| ProgramError::BorshIoError(err.to_string()))?;
         }
         SpvInstruction::SubmitProof(proof_info) => {
-            SpvProcessor::do_submit_proof(accounts, &proof_info).map_err(|err| ProgramError::BorshIoError(err.to_string()))?;
+            SpvProcessor::do_submit_proof(accounts, &proof_info)
+                .map_err(|err| ProgramError::BorshIoError(err.to_string()))?;
         }
     }
     Ok(())
@@ -132,7 +133,6 @@ impl SpvProcessor {
         Ok(()) //placeholder
     }
 }
-
 
 #[cfg(test)]
 mod test {

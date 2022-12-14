@@ -1,8 +1,11 @@
 //! Spv proof Verification Program
-use crate::ID as id;
 use crate::state::spv::*;
+use crate::ID as id;
 use serde::{Deserialize, Serialize};
-use solana_program::{pubkey::Pubkey, instruction::{Instruction, AccountMeta}};
+use solana_program::{
+    instruction::{AccountMeta, Instruction},
+    pubkey::Pubkey,
+};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub enum SpvInstruction {
