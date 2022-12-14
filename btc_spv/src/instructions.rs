@@ -1,9 +1,8 @@
 //! Spv proof Verification Program
-use crate::id;
-use crate::spv_state::*;
-use serde_derive::{Deserialize, Serialize};
-use solana_sdk::instruction::{AccountMeta, Instruction};
-use solana_sdk::pubkey::Pubkey;
+use crate::ID as id;
+use crate::state::spv::*;
+use serde::{Deserialize, Serialize};
+use solana_program::{pubkey::Pubkey, instruction::{Instruction, AccountMeta}};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub enum SpvInstruction {
@@ -33,7 +32,7 @@ pub fn client_request(
 ) -> Instruction {
     let account_meta = vec![AccountMeta::new(*owner, true)];
     Instruction::new(
-        id(),
+        id,
         &SpvInstruction::ClientRequest(ClientRequestInfo {
             txhash,
             confirmations,
@@ -50,7 +49,7 @@ pub fn cancel_request(owner: &Pubkey, request: &Pubkey) -> Instruction {
         AccountMeta::new(*owner, true),
         AccountMeta::new(*request, false),
     ];
-    Instruction::new(id(), &SpvInstruction::CancelRequest, account_meta)
+    Instruction::new(id, &SpvInstruction::CancelRequest, account_meta)
 }
 
 pub fn submit_proof(
@@ -65,7 +64,7 @@ pub fn submit_proof(
         AccountMeta::new(*request, false),
     ];
     Instruction::new(
-        id(),
+        id,
         &SpvInstruction::SubmitProof(Proof {
             submitter: *submitter,
             proof,

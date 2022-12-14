@@ -1,7 +1,7 @@
-use crate::header_store::*;
+use super::header_store::*;
 use crate::utils::*;
-use serde_derive::{Deserialize, Serialize};
-use solana_sdk::pubkey::Pubkey;
+use serde::{Deserialize, Serialize};
+use solana_program::pubkey::Pubkey;
 use std::{error, fmt};
 
 pub type BitcoinTxHash = [u8; 32];

@@ -3,16 +3,14 @@
 #![allow(unused_mut)]
 #![allow(dead_code)]
 // This version is a work in progress and contains placeholders and incomplete components
-pub mod header_store;
-pub mod spv_instruction;
-pub mod spv_processor;
-pub mod spv_state;
+pub mod instructions;
+pub mod processor;
 pub mod utils;
+pub mod state;
 
-use crate::spv_processor::process_instruction;
+mod entrypoint;
 
-solana_sdk::declare_program!(
-    "BtcSpv1111111111111111111111111111111111111",
-    solana_btc_spv_program,
-    process_instruction
-);
+use solana_program::pubkey::Pubkey;
+use crate::processor::process_instruction;
+
+pub const ID: Pubkey = solana_program::pubkey!("3VsEWnjL2Q6rp1Do2X1xH7g81HDWmFDZn8UZJWrsK4Nk");

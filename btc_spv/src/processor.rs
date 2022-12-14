@@ -1,17 +1,53 @@
 //! Bitcoin SPV proof verifier program
-//! Receive merkle proofs and block headers, validate transaction
-use crate::spv_instruction::*;
-use crate::spv_state::*;
+//! Receive merkle proofs ad block headers, validate transaction
+
+use crate::state::spv::*;
+
+use crate::instructions::*;
 #[allow(unused_imports)]
 use crate::utils::*;
-use log::*;
-use solana_sdk::account::KeyedAccount;
-use solana_sdk::instruction::InstructionError;
-use solana_sdk::program_utils::limited_deserialize;
-use solana_sdk::pubkey::Pubkey;
+//use solana_sdk::account::KeyedAccount;
+//use solana_sdk::instruction::InstructionError;
+//use solana_sdk::program_utils::limited_deserialize;
+//use solana_sdk::pubkey::Pubkey;
 
-pub struct SpvProcessor {}
+use solana_program::{
+    pubkey::Pubkey,
+    instruction::InstructionError,
+    account_info::AccountInfo,
+    entrypoint::ProgramResult,
+    program_utils::limited_deserialize, program_error::ProgramError
+};
 
+pub struct SpvProcessor;
+
+/// Instruction processor
+pub fn process_instruction(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    data: &[u8],
+) -> ProgramResult {
+    // solana_logger::setup();
+
+    let command = limited_deserialize::<SpvInstruction>(data, data.len() as u64).map_err(|err| ProgramError::BorshIoError(err.to_string()))?;
+
+    solana_program::log::sol_log(&format!("{:?}", command));
+
+    // todo: get rid of the err.to_string() in map_err
+
+    match command {
+        SpvInstruction::ClientRequest(client_request_info) => {
+            SpvProcessor::do_client_request(accounts, &client_request_info).map_err(|err| ProgramError::BorshIoError(err.to_string()))?;
+        }
+        SpvInstruction::CancelRequest => {
+            SpvProcessor::do_cancel_request(accounts).map_err(|err| ProgramError::BorshIoError(err.to_string()))?;
+        }
+        SpvInstruction::SubmitProof(proof_info) => {
+            SpvProcessor::do_submit_proof(accounts, &proof_info).map_err(|err| ProgramError::BorshIoError(err.to_string()))?;
+        }
+    }
+    Ok(())
+}
 impl SpvProcessor {
     pub fn validate_header_chain(
         headers: HeaderChain,
@@ -24,7 +60,7 @@ impl SpvProcessor {
 
     #[allow(clippy::needless_pass_by_value)]
     fn map_to_invalid_arg(err: std::boxed::Box<bincode::ErrorKind>) -> InstructionError {
-        warn!("Deserialize failed, not a valid state: {:?}", err);
+        solana_program::msg!("Deserialize failed, not a valid state: {:?}", err);
         InstructionError::InvalidArgument
     }
 
@@ -34,7 +70,7 @@ impl SpvProcessor {
         if let AccountState::Verification(proof) = proof_state {
             Ok(proof)
         } else {
-            error!("Not a valid proof");
+            solana_program::msg!("Not a valid proof");
             Err(InstructionError::InvalidAccountData)
         }
     }
@@ -45,7 +81,7 @@ impl SpvProcessor {
         if let AccountState::Request(info) = req_state {
             Ok(info)
         } else {
-            error!("Not a valid proof request");
+            solana_program::msg!("Not a valid proof request");
             Err(InstructionError::InvalidAccountData)
         }
     }
@@ -56,17 +92,17 @@ impl SpvProcessor {
         if let AccountState::Unallocated = acct_state {
             Ok(())
         } else {
-            error!("Provided account is already occupied");
+            solana_program::msg!("Provided account is already occupied");
             Err(InstructionError::InvalidAccountData)
         }
     }
 
     pub fn do_client_request(
-        keyed_accounts: &[KeyedAccount],
+        keyed_accounts: &[AccountInfo],
         request_info: &ClientRequestInfo,
     ) -> Result<(), InstructionError> {
         if keyed_accounts.len() != 2 {
-            error!("Client Request invalid accounts argument length (should be 2)")
+            solana_program::msg!("Client Request invalid accounts argument length (should be 2)")
         }
         const OWNER_INDEX: usize = 0;
         const REQUEST_INDEX: usize = 1;
@@ -75,9 +111,9 @@ impl SpvProcessor {
         Ok(()) //placeholder
     }
 
-    pub fn do_cancel_request(keyed_accounts: &[KeyedAccount]) -> Result<(), InstructionError> {
+    pub fn do_cancel_request(keyed_accounts: &[AccountInfo]) -> Result<(), InstructionError> {
         if keyed_accounts.len() != 2 {
-            error!("Client Request invalid accounts argument length (should be 2)")
+            solana_program::msg!("Client Request invalid accounts argument length (should be 2)")
         }
         const OWNER_INDEX: usize = 0;
         const CANCEL_INDEX: usize = 1;
@@ -85,43 +121,24 @@ impl SpvProcessor {
     }
 
     pub fn do_submit_proof(
-        keyed_accounts: &[KeyedAccount],
+        keyed_accounts: &[AccountInfo],
         proof_info: &Proof,
     ) -> Result<(), InstructionError> {
         if keyed_accounts.len() != 2 {
-            error!("Client Request invalid accounts argument length (should be 2)")
+            solana_program::msg!("Client Request invalid accounts argument length (should be 2)")
         }
         const SUBMITTER_INDEX: usize = 0;
         const PROOF_REQUEST_INDEX: usize = 1;
         Ok(()) //placeholder
     }
 }
-pub fn process_instruction(
-    _program_id: &Pubkey,
-    keyed_accounts: &[KeyedAccount],
-    data: &[u8],
-) -> Result<(), InstructionError> {
-    // solana_logger::setup();
 
-    let command = limited_deserialize::<SpvInstruction>(data)?;
-
-    trace!("{:?}", command);
-
-    match command {
-        SpvInstruction::ClientRequest(client_request_info) => {
-            SpvProcessor::do_client_request(keyed_accounts, &client_request_info)
-        }
-        SpvInstruction::CancelRequest => SpvProcessor::do_cancel_request(keyed_accounts),
-        SpvInstruction::SubmitProof(proof_info) => {
-            SpvProcessor::do_submit_proof(keyed_accounts, &proof_info)
-        }
-    }
-}
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{spv_instruction, spv_state, utils};
+    use crate::state::spv as spv_state;
+    use crate::{instructions, utils};
 
     #[test]
     fn test_parse_header_hex() -> Result<(), SpvError> {
