@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "btc_spv",
+    "btc_spv_bin"
+]
