@@ -35,7 +35,7 @@ fn main() {
 
     let testhash = "0000000000000bae09a7a393a8acded75aa67e46cb81f7acaa5ad94f9eacd103";
     let blockhash = matches.value_of("blockhash").unwrap_or(testhash);
-    let blockraw = get_block_raw(&blockhash);
+    let blockraw = get_block_raw(blockhash);
 
     if default_output == output {
         let fname = format!("block-{}.in", blockhash);

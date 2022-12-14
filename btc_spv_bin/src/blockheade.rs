@@ -66,7 +66,7 @@ fn main() {
 
     let testhash = "0000000000000bae09a7a393a8acded75aa67e46cb81f7acaa5ad94f9eacd103";
     let blockhash = matches.value_of("blockhash").unwrap_or(testhash);
-    let headerraw = get_header_raw(&blockhash);
+    let headerraw = get_header_raw(blockhash);
     println!("header - {}", headerraw);
     println!("hash   - {}", blockhash);
     println!("length - {}", headerraw.len());
