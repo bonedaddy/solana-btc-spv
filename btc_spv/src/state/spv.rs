@@ -6,7 +6,7 @@ use std::{error, fmt};
 use bigint::U256;
 pub type BitcoinTxHash = [u8; 32];
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct BlockHeader {
     // Bitcoin network version
     pub version: u32,
@@ -23,6 +23,23 @@ pub struct BlockHeader {
     // Block hash
     pub blockhash: [u8; 32],
 }
+
+impl std::fmt::Debug for BlockHeader {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("BlockHeader")
+        .field("version", &self.version)
+        .field("parent", &hex::encode(&self.parent))
+        .field("merkle_root.hash", &hex::encode(&self.merkle_root.hash))
+        .field("merkle_root.side", &self.merkle_root.side)
+        .field("blockhash", &hex::encode(&self.blockhash))
+        .field("time", &self.time)
+        .field("nbits", &self.nbits)
+        .field("nonce", &self.nonce)
+        .finish()
+    }
+}
+
+
 
 impl BlockHeader {
     pub fn new(header: &[u8; 80], blockhash: &[u8; 32]) -> Result<BlockHeader, SpvError> {
