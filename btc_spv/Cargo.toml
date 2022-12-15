@@ -16,6 +16,7 @@ serde = {version = "1", features = ["derive"]}
 solana-program = ">=1.10.0"
 hex = "0.4.2"
 static-pubkey = "1.0.2"
+bigint = "4.4.1"
 [dev-dependencies]
 solana-sdk = ">=1.10.0"
 [lib]
